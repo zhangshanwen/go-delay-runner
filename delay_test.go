@@ -19,9 +19,11 @@ func TestDelay(t *testing.T) {
 			t := Task{
 				ExecuteAt: time.Now().Add(time.Duration(i+2) * time.Second),
 				Handlers: []Handler{func(...interface{}) {
-					fmt.Println("开始执行任务", i, time.Now())
+					fmt.Println("开始执行任务", i+2, time.Now())
 				}},
 			}
+			w.Push(t)
+			w.Push(t)
 			w.Push(t)
 		}(i)
 	}

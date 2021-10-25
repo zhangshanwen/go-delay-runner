@@ -41,37 +41,31 @@ var (
 
 // Push 推送新任务
 func (n *Node) Push(task Task, w *Worker) {
-	for {
-		if n.ExecuteAt.Equal(task.ExecuteAt) {
-			// 如果当前任务跟即将执行任务时间相同
-			n.Tasks = append(n.Tasks, task)
-			return
-		} else if n.ExecuteAt.After(task.ExecuteAt) {
-			// 如果当前任务比即将执行任务时间更小
-			oldN := *n
-			n.NextNode = &oldN
-			n.Tasks = []Task{task}
-			n.ExecuteAt = task.ExecuteAt
-			w.Signal <- workSignalStop
-			go w.Run()
-
-			return
-		} else {
-			// 如果当前任务比即将执行任务时间更大
-			if n.NextNode == nil {
-				n.NextNode = &Node{
-					NextNode:  nil,
-					Tasks:     []Task{task},
-					ExecuteAt: task.ExecuteAt,
-				}
-				return
+	if n.ExecuteAt.Equal(task.ExecuteAt) {
+		// 如果当前任务跟即将执行任务时间相同
+		n.Tasks = append(n.Tasks, task)
+		return
+	} else if n.ExecuteAt.After(task.ExecuteAt) {
+		// 如果当前任务比即将执行任务时间更小
+		oldN := *n
+		n.NextNode = &oldN
+		n.Tasks = []Task{task}
+		n.ExecuteAt = task.ExecuteAt
+		w.Signal <- workSignalStop
+		go w.Run()
+		return
+	} else {
+		// 如果当前任务比即将执行任务时间更大
+		if n.NextNode == nil {
+			n.NextNode = &Node{
+				NextNode:  nil,
+				Tasks:     []Task{task},
+				ExecuteAt: task.ExecuteAt,
 			}
-
-			n.NextNode.Push(task, w)
 			return
 		}
+		n.NextNode.Push(task, w)
 	}
-
 }
 
 func (w *Worker) Push(task Task) {
