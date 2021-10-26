@@ -11,6 +11,7 @@ type (
 	Handler        func(...interface{})
 	Task           struct {
 		ExecuteAt time.Time
+		CreatedAt time.Time
 		Handlers  []Handler
 	}
 	Logger interface {
@@ -41,6 +42,7 @@ var (
 
 // Push 推送新任务
 func (n *Node) Push(task *Task, w *Worker) {
+	task.CreatedAt = time.Now()
 	if n.ExecuteAt.Equal(task.ExecuteAt) {
 		// 如果当前任务跟即将执行任务时间相同
 		n.Tasks = append(n.Tasks, task)
@@ -86,7 +88,7 @@ func (w *Worker) Push(task *Task) {
 func NewWorker() *Worker {
 	return &Worker{
 		Signal:      make(chan workSignalType, DefaultCacheLen),
-		SignalStart: make(chan workSignalType, DefaultCacheLen),
+		SignalStart: make(chan workSignalType, 1),
 		Logger:      log.Default(),
 	}
 }
