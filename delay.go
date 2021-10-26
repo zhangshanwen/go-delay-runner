@@ -19,7 +19,7 @@ type (
 	Node struct {
 		ExecuteAt time.Time
 		NextNode  *Node
-		Tasks     []Task
+		Tasks     []*Task
 	}
 	Worker struct {
 		Mx          sync.Mutex
@@ -40,7 +40,7 @@ var (
 )
 
 // Push 推送新任务
-func (n *Node) Push(task Task, w *Worker) {
+func (n *Node) Push(task *Task, w *Worker) {
 	if n.ExecuteAt.Equal(task.ExecuteAt) {
 		// 如果当前任务跟即将执行任务时间相同
 		n.Tasks = append(n.Tasks, task)
@@ -49,7 +49,7 @@ func (n *Node) Push(task Task, w *Worker) {
 		// 如果当前任务比即将执行任务时间更小
 		oldN := *n
 		n.NextNode = &oldN
-		n.Tasks = []Task{task}
+		n.Tasks = []*Task{task}
 		n.ExecuteAt = task.ExecuteAt
 		w.Signal <- workSignalStop
 		go w.Run()
@@ -59,7 +59,7 @@ func (n *Node) Push(task Task, w *Worker) {
 		if n.NextNode == nil {
 			n.NextNode = &Node{
 				NextNode:  nil,
-				Tasks:     []Task{task},
+				Tasks:     []*Task{task},
 				ExecuteAt: task.ExecuteAt,
 			}
 			return
@@ -68,13 +68,13 @@ func (n *Node) Push(task Task, w *Worker) {
 	}
 }
 
-func (w *Worker) Push(task Task) {
+func (w *Worker) Push(task *Task) {
 	w.Mx.Lock()
 	defer w.Mx.Unlock()
 	if w.NextNode == nil {
 		w.NextNode = &Node{
 			NextNode:  nil,
-			Tasks:     []Task{task},
+			Tasks:     []*Task{task},
 			ExecuteAt: task.ExecuteAt,
 		}
 		w.SignalStart <- workSignalStart

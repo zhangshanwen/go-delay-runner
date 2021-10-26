@@ -17,14 +17,14 @@ func TestDelay(t *testing.T) {
 		go func(i int) {
 			defer wg.Done()
 			t := Task{
-				ExecuteAt: time.Now().Add(time.Duration(i+2) * time.Second),
+				ExecuteAt: time.Now().Add(time.Duration(i+10) * time.Second),
 				Handlers: []Handler{func(...interface{}) {
-					fmt.Println("开始执行任务", i+2, time.Now())
+					fmt.Println("开始执行任务", i+10, time.Now())
 				}},
 			}
-			w.Push(t)
-			w.Push(t)
-			w.Push(t)
+			w.Push(&t)
+			w.Push(&t)
+			w.Push(&t)
 		}(i)
 	}
 	wg.Wait()
