@@ -37,27 +37,31 @@ func TestDelayWork(t *testing.T) {
 	w := NewWorker()
 	w.Start()
 	t.Log("创建时间", time.Now())
-	a := struct {
+	type A struct {
 		Name string
-	}{Name: "zhangsan"}
+	}
+	a := A{Name: "dfss"}
 	task := Task{
 		ExecuteAt: time.Now().Add(time.Duration(2) * time.Second),
 		Args:      a,
 	}
-	task.Handlers = []Handler{func(interface{}) {
-		t.Log("开始执行任务", 1, time.Now(), task.Args)
+	task.Handlers = []Handler{func(a interface{}) {
+		t.Log("开始执行任务", 1, time.Now(), a)
 	}}
 	w.Push(&task)
 	time.Sleep(3 * time.Second)
-	b := struct {
-		Name string
-	}{Name: "lisi"}
+	b := A{Name: "lisi"}
 	task = Task{
 		ExecuteAt: time.Now().Add(time.Duration(2) * time.Second),
 		Args:      b,
 	}
-	task.Handlers = []Handler{func(interface{}) {
-		t.Log("开始执行任务", 2, time.Now(), task.Args)
+	task.Handlers = []Handler{func(a interface{}) {
+		if p, ok := (a).(A); ok {
+			t.Log("开始执行任务", 2, time.Now(), p.Name)
+		} else {
+			t.Log("开始执行任务", 2, time.Now(), "执行失败")
+		}
+
 	}}
 	w.Push(&task)
 	t.Log("-----")
