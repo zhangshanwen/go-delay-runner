@@ -1,7 +1,6 @@
 package go_delay_runner
 
 import (
-	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -18,8 +17,8 @@ func TestDelay(t *testing.T) {
 			defer wg.Done()
 			t := Task{
 				ExecuteAt: time.Now().Add(time.Duration(i) * time.Second),
-				Handlers: []Handler{func(...interface{}) {
-					fmt.Println("开始执行任务", i, time.Now())
+				Handlers: []Handler{func(interface{}) {
+					t.Log("开始执行任务", i, time.Now())
 				}},
 			}
 			w.Push(&t)
@@ -28,7 +27,40 @@ func TestDelay(t *testing.T) {
 		}(i + 5)
 	}
 	wg.Wait()
-	fmt.Println("-----")
+	t.Log("-----")
+	for {
+		time.Sleep(3 * time.Second)
+	}
+}
+
+func TestDelayWork(t *testing.T) {
+	w := NewWorker()
+	w.Start()
+	t.Log("创建时间", time.Now())
+	a := struct {
+		Name string
+	}{Name: "zhangsan"}
+	task := Task{
+		ExecuteAt: time.Now().Add(time.Duration(2) * time.Second),
+		Args:      a,
+	}
+	task.Handlers = []Handler{func(interface{}) {
+		t.Log("开始执行任务", 1, time.Now(), task.Args)
+	}}
+	w.Push(&task)
+	time.Sleep(3 * time.Second)
+	b := struct {
+		Name string
+	}{Name: "lisi"}
+	task = Task{
+		ExecuteAt: time.Now().Add(time.Duration(2) * time.Second),
+		Args:      b,
+	}
+	task.Handlers = []Handler{func(interface{}) {
+		t.Log("开始执行任务", 2, time.Now(), task.Args)
+	}}
+	w.Push(&task)
+	t.Log("-----")
 	for {
 		time.Sleep(3 * time.Second)
 	}

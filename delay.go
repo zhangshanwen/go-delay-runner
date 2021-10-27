@@ -8,11 +8,12 @@ import (
 
 type (
 	workSignalType int
-	Handler        func(...interface{})
+	Handler        func(interface{})
 	Task           struct {
 		ExecuteAt time.Time
 		CreatedAt time.Time
 		Handlers  []Handler
+		Args      interface{}
 	}
 	Logger interface {
 		Println(v ...interface{})
@@ -96,9 +97,12 @@ func NewWorker() *Worker {
 func (w *Worker) Start() {
 	go func() {
 		for _ = range w.SignalStart {
+			w.Logger.Println("接收到开始信号......")
+			w.Logger.Println("开始执行......")
 			go w.Run()
 		}
 	}()
+
 }
 
 func (w *Worker) Run() {
@@ -111,13 +115,13 @@ func (w *Worker) Run() {
 	case s := <-w.Signal:
 		switch s {
 		case workSignalStop:
-			w.Logger.Println("程序终止中.......")
+			w.Logger.Println("Runner中断中.......")
 			break
 		}
 	case <-time.After(w.NextNode.ExecuteAt.Sub(time.Now())):
 		for _, task := range w.NextNode.Tasks {
 			for _, handler := range task.Handlers {
-				go handler()
+				go handler(task.Args)
 			}
 		}
 		w.NextNode = w.NextNode.NextNode
