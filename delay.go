@@ -54,8 +54,11 @@ func (n *Node) Push(task *Task, w *Worker) {
 		n.NextNode = &oldN
 		n.Tasks = []*Task{task}
 		n.ExecuteAt = task.ExecuteAt
-		w.Signal <- workSignalStop
-		go w.Run()
+		select {
+		case w.Signal <- workSignalStop:
+			go w.Run()
+		}
+
 		return
 	} else {
 		// 如果当前任务比即将执行任务时间更大
@@ -80,7 +83,9 @@ func (w *Worker) Push(task *Task) {
 			Tasks:     []*Task{task},
 			ExecuteAt: task.ExecuteAt,
 		}
-		w.SignalStart <- workSignalStart
+		select {
+		case w.SignalStart <- workSignalStart:
+		}
 		return
 	}
 	w.NextNode.Push(task, w)

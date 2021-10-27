@@ -46,7 +46,7 @@ func TestDelayWork(t *testing.T) {
 		Args:      a,
 	}
 	task.Handlers = []Handler{func(a interface{}) {
-		t.Log("开始执行任务", 1, time.Now(), a)
+		t.Log("开始执行任务", 1, task.ExecuteAt, time.Now(), a)
 	}}
 	w.Push(&task)
 	time.Sleep(3 * time.Second)
@@ -56,7 +56,7 @@ func TestDelayWork(t *testing.T) {
 		Args:      b,
 	}
 	task.Handlers = []Handler{func(a interface{}) {
-		if p, ok := (a).(A); ok {
+		if p, ok := a.(A); ok {
 			t.Log("开始执行任务", 2, time.Now(), p.Name)
 		} else {
 			t.Log("开始执行任务", 2, time.Now(), "执行失败")
