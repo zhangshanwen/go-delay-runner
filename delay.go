@@ -2,7 +2,6 @@ package go_delay_runner
 
 import (
 	"log"
-	"sync"
 	"time"
 )
 
@@ -24,7 +23,6 @@ type (
 		Tasks     []*Task
 	}
 	Worker struct {
-		Mx       sync.Mutex
 		NextNode *Node
 		Signal   chan workSignalType
 		Logger   Logger
@@ -36,7 +34,7 @@ const (
 )
 
 var (
-	DefaultCacheLen = 100
+	DefaultCacheLen = 0
 )
 
 // Push 推送新任务
@@ -73,8 +71,6 @@ func (n *Node) Push(task *Task, w *Worker) {
 }
 
 func (w *Worker) Push(task *Task) {
-	w.Mx.Lock()
-	defer w.Mx.Unlock()
 	if w.NextNode == nil {
 		w.NextNode = &Node{
 			NextNode:  nil,
@@ -95,8 +91,6 @@ func NewWorker() *Worker {
 }
 
 func (w *Worker) Run() {
-	w.Mx.Lock()
-	defer w.Mx.Unlock()
 	if w.NextNode == nil {
 		return
 	}
