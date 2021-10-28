@@ -24,17 +24,15 @@ type (
 		Tasks     []*Task
 	}
 	Worker struct {
-		Mx          sync.Mutex
-		NextNode    *Node
-		Signal      chan workSignalType
-		SignalStart chan workSignalType
-		Logger      Logger
+		Mx       sync.Mutex
+		NextNode *Node
+		Signal   chan workSignalType
+		Logger   Logger
 	}
 )
 
 const (
 	workSignalStop workSignalType = iota + 1
-	workSignalStart
 )
 
 var (
@@ -83,9 +81,7 @@ func (w *Worker) Push(task *Task) {
 			Tasks:     []*Task{task},
 			ExecuteAt: task.ExecuteAt,
 		}
-		select {
-		case w.SignalStart <- workSignalStart:
-		}
+		go w.Run()
 		return
 	}
 	w.NextNode.Push(task, w)
@@ -93,21 +89,9 @@ func (w *Worker) Push(task *Task) {
 
 func NewWorker() *Worker {
 	return &Worker{
-		Signal:      make(chan workSignalType, DefaultCacheLen),
-		SignalStart: make(chan workSignalType, 1),
-		Logger:      log.Default(),
+		Signal: make(chan workSignalType, DefaultCacheLen),
+		Logger: log.Default(),
 	}
-}
-
-func (w *Worker) Start() {
-	go func() {
-		for _ = range w.SignalStart {
-			w.Logger.Println("接收到开始信号......")
-			w.Logger.Println("开始执行......")
-			go w.Run()
-		}
-	}()
-
 }
 
 func (w *Worker) Run() {

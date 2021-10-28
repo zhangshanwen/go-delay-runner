@@ -8,7 +8,6 @@ import (
 
 func TestDelay(t *testing.T) {
 	w := NewWorker()
-	w.Start()
 	nums := 100
 	wg := sync.WaitGroup{}
 	wg.Add(nums)
@@ -35,7 +34,6 @@ func TestDelay(t *testing.T) {
 
 func TestDelayWork(t *testing.T) {
 	w := NewWorker()
-	w.Start()
 	t.Log("创建时间", time.Now())
 	type A struct {
 		Name string
