@@ -39,7 +39,6 @@ var (
 
 // Push 推送新任务
 func (n *Node) Push(task *Task, w *Worker) {
-	task.CreatedAt = time.Now()
 	if n.ExecuteAt.Equal(task.ExecuteAt) {
 		// 如果当前任务跟即将执行任务时间相同
 		n.Tasks = append(n.Tasks, task)
@@ -71,6 +70,7 @@ func (n *Node) Push(task *Task, w *Worker) {
 }
 
 func (w *Worker) Push(task *Task) {
+	task.CreatedAt = time.Now()
 	if w.NextNode == nil {
 		w.NextNode = &Node{
 			NextNode:  nil,
@@ -99,7 +99,6 @@ func (w *Worker) Run() {
 		switch s {
 		case workSignalStop:
 			w.Logger.Println("Runner中断中.......")
-			break
 		}
 	case <-time.After(w.NextNode.ExecuteAt.Sub(time.Now())):
 		for _, task := range w.NextNode.Tasks {
