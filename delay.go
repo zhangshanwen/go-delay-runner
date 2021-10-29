@@ -27,7 +27,7 @@ type (
 		NextNode *Node
 		Signal   chan workSignalType
 		Logger   Logger
-		Mx       sync.Mutex
+		Mx       sync.RWMutex
 	}
 )
 
