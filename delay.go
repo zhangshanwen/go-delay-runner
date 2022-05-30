@@ -1,6 +1,7 @@
 package go_delay_runner
 
 import (
+	"errors"
 	"log"
 	"sync"
 	"time"
@@ -37,10 +38,14 @@ const (
 
 var (
 	DefaultCacheLen = 0
+	InvalidTime     = errors.New("InvalidTime")
 )
 
 // Push 推送新任务
-func (n *Node) Push(task *Task, w *Worker) {
+func (n *Node) Push(task *Task, w *Worker) (err error) {
+	if time.Now().After(task.ExecuteAt) {
+		return InvalidTime
+	}
 	if n.ExecuteAt.Equal(task.ExecuteAt) {
 		// 如果当前任务跟即将执行任务时间相同
 		n.Tasks = append(n.Tasks, task)
@@ -67,11 +72,14 @@ func (n *Node) Push(task *Task, w *Worker) {
 			}
 			return
 		}
-		n.NextNode.Push(task, w)
+		if err = n.NextNode.Push(task, w); err != nil {
+			return
+		}
 	}
+	return
 }
 
-func (w *Worker) Push(task *Task) {
+func (w *Worker) Push(task *Task) (err error) {
 	task.CreatedAt = time.Now()
 	w.Mx.Lock()
 	defer w.Mx.Unlock()
@@ -84,7 +92,7 @@ func (w *Worker) Push(task *Task) {
 		go w.Run()
 		return
 	}
-	w.NextNode.Push(task, w)
+	return w.NextNode.Push(task, w)
 }
 
 func NewWorker() *Worker {

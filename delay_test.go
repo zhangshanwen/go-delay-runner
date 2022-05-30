@@ -8,22 +8,23 @@ import (
 
 func TestDelay(t *testing.T) {
 	w := NewWorker()
-	nums := 100
+	nums := 10
 	wg := sync.WaitGroup{}
 	wg.Add(nums)
 	for i := 0; i < nums; i++ {
 		go func(i int) {
 			defer wg.Done()
-			t := Task{
+			task := Task{
 				ExecuteAt: time.Now().Add(time.Duration(i) * time.Second),
 				Handlers: []Handler{func(interface{}) {
 					t.Log("开始执行任务", i, time.Now())
 				}},
 			}
-			w.Push(&t)
-			w.Push(&t)
-			w.Push(&t)
-		}(i + 5)
+			t.Log(w.Push(&task))
+			t.Log(w.Push(&task))
+			t.Log(w.Push(&task))
+			t.Log(w.Push(&task))
+		}(i)
 	}
 	wg.Wait()
 	t.Log("-----")
